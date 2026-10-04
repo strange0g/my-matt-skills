@@ -28,11 +28,16 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 ### Implementation vs Review
 
-Remember that all work goes through two stages: implementation and review. The implementation agent has the most **context pressure**. They are responsible for exploration, writing code, and debugging failures.
+All work goes through implementation and review stages.
 
-The review agent has the least context pressure - it receives a diff, so no exploration needed. It often does not need to write code or debug.
+In this architecture, the **implementation agent is Google Jules (`jules.google`)**, executing remotely in its isolated Cloud VM. Jules experiences high context pressure while writing code and running in-VM tests.
 
-This means that the review agent should be responsible for imposing coding standards, not the implementation agent.
+The **review agent is the local harness**, paired with the dedicated **Jules Tester Agent** in the cloud. The review agent experiences low context pressure because it receives a concrete Pull Request diff and test outputs.
+
+Evaluate retrospectives through this division of labor:
+- **Prompt quality:** did the ticket prompt provide Jules with clear seams, acceptance tests, and domain vocabulary?
+- **VM Environment:** does `AGENTS.md` give Jules the exact build and test commands needed to succeed in its Cloud VM?
+- **Review and standards:** did the local review agent and Jules Tester Agent catch edge cases before merge?
 
 ### Files
 

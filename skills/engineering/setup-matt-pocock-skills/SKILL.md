@@ -60,12 +60,20 @@ The defaults are the five canonical roles, each label string equal to its name: 
 
 Offer **multi-context** (a root `GLOSSARY-MAP.md` pointing to per-context `GLOSSARY.md` files) only when exploration found monorepo signals. Then confirm which layout they want.
 
+**Section D: Google Jules delegation.**
+
+Verify that the repo is configured to delegate code implementation to Google Jules (`jules.google`).
+
+1. Check if `JULES_API_KEY` is present in the environment or `.env` file. If missing, prompt the user with instructions to obtain their key from [jules.google.com/settings](https://jules.google.com/settings).
+2. Check if the repo is connected to the Jules GitHub App using `node scripts/jules.mjs check-sources`. If not listed, prompt the user to authorize the repo in the Jules web dashboard.
+3. Confirm that the project test command (e.g. `npm test`) is configured so Jules can run tests in its Cloud VM.
+
 ### 3. Confirm and edit
 
 Show the user a draft of:
 
 - The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
+- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, `docs/agents/jules.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
 
 Let them edit before writing.
 
@@ -97,6 +105,10 @@ The block:
 ### Domain docs
 
 [one-line summary of layout: "single-context" or "multi-context"]. See `docs/agents/domain.md`.
+
+### Jules delegation
+
+All code implementation delegated to Google Jules (`jules.google`). See `docs/agents/jules.md`.
 ```
 
 Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
@@ -108,6 +120,7 @@ Then write the docs files using the seed templates in this skill folder as a sta
 - [issue-tracker-local.md](./issue-tracker-local.md): local-markdown issue tracker
 - [triage-labels.md](./triage-labels.md): label mapping (only if `triage` is installed)
 - [domain.md](./domain.md): domain doc consumer rules + layout
+- [jules.md](./jules.md): Google Jules delegation framework
 
 For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
 

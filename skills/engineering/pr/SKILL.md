@@ -159,9 +159,12 @@ You may use one of these, you may use several, it is unlikely you will use all o
 
 Concrete evidence that the change works. Show a before and after.
 
-Screenshots are S-tier - when the environment is set up for it and the change is visual.
+Screenshots are highest fidelity when the environment is set up for it and the change is visual.
 
-Execution-based evidence is A-tier. Test results, console output. Show the exact test that now fails and passes, using pseudocode.
+Execution-based evidence includes:
+- **Jules Coder Agent:** VM test runner output and passing assertions.
+- **Jules Tester Agent:** Results of boundary and adversarial tests authored on the PR branch.
+- **Local Harness:** Read-only test suite pass on checkout.
 
 ### Merge Danger
 

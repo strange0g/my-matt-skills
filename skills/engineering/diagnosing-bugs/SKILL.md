@@ -87,7 +87,7 @@ Do not proceed until you have reproduced **and** minimised.
 
 ## Phase 3: Hypothesise
 
-Generate **3–5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
+Generate **3 to 5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
 
 Each hypothesis must be **falsifiable**: state the prediction it makes.
 
@@ -111,28 +111,30 @@ Tool preference:
 
 **Perf branch.** For performance regressions, logs are usually wrong. Instead: establish a baseline measurement (timing harness, `performance.now()`, profiler, query plan), then bisect. Measure first, fix second.
 
-## Phase 5: Fix + regression test
+## Phase 5: Delegate fix and regression test to Google Jules
 
-Write the regression test **before the fix**, but only if there is a **correct seam** for it.
+The local harness never edits repository source code directly. Once the root cause is isolated and confirmed by the Phase 1 feedback loop:
 
-A correct seam is one where the test exercises the **real bug pattern** as it occurs at the call site. If the only available seam is too shallow (single-caller test when the bug needs multiple callers, unit test that can't replicate the chain that triggered the bug), a regression test there gives false confidence.
+1. Package a targeted bug-fix prompt for Google Jules (`jules.google`):
+   - State the validated hypothesis and exact root cause.
+   - Provide the deterministic reproduction command that currently fails.
+   - Instruct Jules to write the regression test first at the verified seam.
+   - Instruct Jules to apply the minimal fix to pass the test and verify in its VM.
+2. Dispatch the session to the Jules Coder Agent:
+   ```bash
+   node scripts/jules.mjs dispatch --prompt "<bug-fix-prompt>" --title "Fix: <bug-summary>"
+   ```
+3. When the Coder Agent opens a PR, launch the Jules Tester Agent to author boundary tests and verify no regressions exist:
+   ```bash
+   node scripts/jules.mjs dispatch-tester --pr-branch "<pr-branch>" --prompt "Verify bug fix for <bug-summary>. Add regression and edge-case tests."
+   ```
 
-**If no correct seam exists, that itself is the finding.** Note it. The codebase architecture is preventing the bug from being locked down. Flag this for the next phase.
-
-If a correct seam exists:
-
-1. Turn the minimised repro into a failing test at that seam.
-2. Watch it fail.
-3. Apply the fix.
-4. Watch it pass.
-5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
-
-## Phase 6: Cleanup
+## Phase 6: Verification and Cleanup
 
 Required before declaring done:
 
-- [ ] Original repro no longer reproduces (re-run the Phase 1 loop)
-- [ ] Regression test passes (or absence of seam is documented)
-- [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
-- [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
-- [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
+- [ ] Check out the Jules PR branch locally
+- [ ] Original repro no longer reproduces (re-run the Phase 1 feedback loop command)
+- [ ] Regression test passes cleanly in local test runner
+- [ ] All temporary debug scripts or scratch files cleaned up
+- [ ] If the fix is scoped and green, auto-merge via `gh pr merge --squash --auto`, or present summary to user

@@ -1,8 +1,8 @@
 ## What it does
 
-`implement` builds work that has already been decided. You point it at a [ticket](https://www.aihero.dev/ai-coding-dictionary/ticket), a [spec](https://www.aihero.dev/ai-coding-dictionary/spec), or the plan you just agreed in the conversation, and it writes the code, drives [tdd](https://aihero.dev/skills-tdd) at the seams, typechecks as it goes, runs [code-review](https://aihero.dev/skills-code-review) at the end, and commits to the current branch.
+`implement` builds work that has already been decided by delegating the implementation to Google Jules (`jules.google`). You point it at a [ticket](https://www.aihero.dev/ai-coding-dictionary/ticket), a [spec](https://www.aihero.dev/ai-coding-dictionary/spec), or the plan you just agreed in the conversation. The local harness packages the ticket with TDD discipline into a task prompt, dispatches the Jules Coder Agent in the cloud, automatically launches the Jules Tester Agent on the resulting Pull Request, and verifies the work with local read-only tests.
 
-It never reopens the plan. There is no interview, no clarifying round, no proposal of a different approach. Whatever was settled upstream is the input, and the skill's whole job is to turn that into a commit. That is what separates it from typing "build this" at a fresh [agent](https://www.aihero.dev/ai-coding-dictionary/agent), which will happily redesign the work while it builds it.
+It never reopens the plan. There is no interview, no clarifying round, no proposal of a different approach. Whatever was settled upstream is the input, and the skill's whole job is to package it for Jules and verify the resulting PR.
 
 ## When to reach for it
 
@@ -12,7 +12,7 @@ Where the work currently lives decides whether this is the right skill:
 
 | The work is… | Reach for |
 | --- | --- |
-| A ticket on the tracker | `/implement #42`, one ticket per [session](https://www.aihero.dev/ai-coding-dictionary/session), [clearing](https://www.aihero.dev/ai-coding-dictionary/clearing) context between tickets |
+| A ticket on the tracker | `/implement #42`, one ticket per session |
 | A spec, not yet split up, and the build spans sessions | [to-tickets](https://aihero.dev/skills-to-tickets) first, then `/implement` per ticket |
 | A spec, and the build is small | `/implement` directly against the spec |
 | Only in the conversation you just had, and it's still small | `/implement` right there, in the same window |
@@ -20,23 +20,20 @@ Where the work currently lives decides whether this is the right skill:
 | One concrete behaviour you want test-first, with no spec | [tdd](https://aihero.dev/skills-tdd) directly |
 | Already built, and you want it checked | [code-review](https://aihero.dev/skills-code-review) directly |
 
-The same-session case is worth naming because the skill's own first line doesn't cover it. `SKILL.md` says "the spec or tickets", which nudges the [model](https://www.aihero.dev/ai-coding-dictionary/model) to go hunting for a file that doesn't exist. If the plan lives only in the thread, say so when you invoke it.
-
 ## Prerequisites
 
-`implement` commits to the branch you are on. It does not create one, and it does not ask. Check you are on the branch you want the work on before you start.
-
-If the tickets came from [to-tickets](https://aihero.dev/skills-to-tickets), the tracker they live on was configured by [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills). `code-review` reads the same configuration to find the originating spec at close-out.
+`implement` uses Google Jules (`jules.google`) via `scripts/jules.mjs`. It requires:
+1. `JULES_API_KEY` set in your environment or `.env` file.
+2. The repository connected to the Jules GitHub App.
+3. Git remote `origin` configured to the target GitHub repository.
 
 ## What one run does
 
-A run is five beats, in order:
+A run follows three phases:
 
-1. Read the ticket or spec and work out the seams.
-2. Drive [tdd](https://aihero.dev/skills-tdd) at the pre-agreed seams, one red-green slice at a time.
-3. Typecheck often, run single test files as it goes.
-4. Run the full test suite once, at the end.
-5. Run [code-review](https://aihero.dev/skills-code-review), then commit to the current branch.
+1. **Jules Coder Agent:** The local harness packages the ticket requirements and [tdd](https://aihero.dev/skills-tdd) contract into a prompt and dispatches to Jules via `node scripts/jules.mjs dispatch`. Jules builds the code test-first in its Cloud VM and opens a Pull Request.
+2. **Jules Tester Agent:** As soon as the PR opens, the harness launches a dedicated Jules Tester Agent via `node scripts/jules.mjs dispatch-tester` to author edge-case, boundary, and regression tests against the PR branch.
+3. **Local Verification:** The watcher subagent fetches the PR branch and runs project test suites and linters in read-only mode. If tests pass and the change is routine, it auto-merges the PR; on major milestones, it presents an executive summary with test evidence for user sign-off.
 
 One run covers one ticket. The tickets [to-tickets](https://aihero.dev/skills-to-tickets) produces are tracer-bullet vertical slices sized to fit a single fresh [context window](https://www.aihero.dev/ai-coding-dictionary/context-window), so the intended rhythm is: clear context, implement one ticket, commit, clear again. Each ticket is self-contained, which is what makes the previous ticket's context disposable.
 

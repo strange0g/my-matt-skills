@@ -1,8 +1,8 @@
 ## What it does
 
-`implement-spec` takes a [spec](https://www.aihero.dev/ai-coding-dictionary/spec) and its [tickets](https://www.aihero.dev/ai-coding-dictionary/ticket) and lands the whole thing in one run. The orchestrating [agent](https://www.aihero.dev/ai-coding-dictionary/agent) hands each ticket to an implementer [subagent](https://www.aihero.dev/ai-coding-dictionary/subagent) working in its own git worktree, merges each finished branch into a single **integration branch**, runs [code-review](https://aihero.dev/skills-code-review) over the result, and resolves the tickets.
+`implement-spec` takes a [spec](https://www.aihero.dev/ai-coding-dictionary/spec) and its [tickets](https://www.aihero.dev/ai-coding-dictionary/ticket) and lands the entire build by orchestrating parallel Google Jules (`jules.google`) cloud sessions. The local harness manages the **frontier** of unblocked tickets, dispatches Jules Coder Agents in parallel, runs the mandatory Jules Tester Agent on every opened Pull Request, merges verified PRs into a single **integration branch**, runs [code-review](https://aihero.dev/skills-code-review), and presents a consolidated executive summary for user sign-off.
 
-It reads the tickets as a **task graph**, not a list. Blocking edges decide what can start, so at any moment there is a **frontier** of tickets whose blockers have all landed, and every ticket on the frontier runs at once. That is the difference from working the tickets one by one: the graph's shape, not its order on the tracker, sets the pace.
+It reads the tickets as a **task graph**, not a list. Blocking edges decide what can start, so at any moment there is a frontier of tickets whose blockers have landed, and every unblocked ticket is dispatched to Jules simultaneously.
 
 ## When to reach for it
 
@@ -11,27 +11,25 @@ You invoke this by typing `/implement-spec`, and the agent won't reach for it on
 | Your situation | Reach for |
 | --- | --- |
 | A spec, split into tickets with blocking edges, that you want landed in one run | `/implement-spec` |
-| One ticket at a time, in your own [context window](https://www.aihero.dev/ai-coding-dictionary/context-window), [clearing](https://www.aihero.dev/ai-coding-dictionary/clearing) between tickets | [implement](https://aihero.dev/skills-implement) |
+| One ticket at a time, in your own context window | [implement](https://aihero.dev/skills-implement) |
 | A spec that isn't split into tickets yet | [to-tickets](https://aihero.dev/skills-to-tickets) first |
 | A small piece of work with no real graph to it | [implement](https://aihero.dev/skills-implement) directly |
 
 ## Prerequisites
 
-- **An issue tracker.** The skill reads the tickets from, and resolves them on, the tracker [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills) configured. If none has been configured, it stops and tells you to run that first rather than guessing.
-- **Tickets with blocking edges**, as [to-tickets](https://aihero.dev/skills-to-tickets) writes them. Without edges the graph is flat and every ticket starts at once.
-- **A [harness](https://www.aihero.dev/ai-coding-dictionary/harness) that runs subagents in the background and gives each one a git worktree.** The concurrency is the point; a harness that runs subagents one at a time gets a slower `implement`.
+- **Google Jules Access:** `JULES_API_KEY` set in your environment or `.env`, and repo connected to the Jules GitHub App.
+- **An issue tracker:** The skill reads tickets from the tracker configured by [setup-matt-pocock-skills](https://aihero.dev/skills-setup-matt-pocock-skills).
+- **Tickets with blocking edges**, as [to-tickets](https://aihero.dev/skills-to-tickets) writes them.
 
 ## The integration branch
 
-Everything lands on one branch. Each implementer:
+Everything lands on one branch. For each frontier ticket:
 
-1. confirms its worktree is based on the integration branch before it starts,
-2. builds its ticket with [tdd](https://aihero.dev/skills-tdd), red-green one slice at a time,
-3. merges the integration branch tip into its own branch before reporting done, so landing it is a fast-forward.
-
-Whether a pull request exists at all is the tracker's call. If your tracker closes work through PRs, or you ask for one, a draft PR opens after the first merge and is marked ready at the end. Otherwise the run stops on the integration branch with every ticket resolved the way your tracker closes work, which works fully offline against a local markdown tracker.
-
-Implementers talk to the orchestrator through [context pointers](https://www.aihero.dev/ai-coding-dictionary/context-pointer) (the spec, the ticket, shared exploration notes, earlier commits) rather than pasted summaries, which keeps each subagent's prompt small and the orchestrator's window free for the graph.
+1. The orchestrator dispatches a Jules Coder Agent targeting the integration branch.
+2. When the Coder Agent opens a PR, a Jules Tester Agent runs deep adversarial and boundary tests in its Cloud VM.
+3. The local harness fetches the verified PR branch and runs read-only tests.
+4. Green PRs are merged into the integration branch, unblocking downstream tickets until the entire graph is resolved.
+5. On completion, the harness generates an Executive Summary with test evidence for user approval.
 
 ## Common questions
 

@@ -23,3 +23,11 @@ Every `SKILL.md` is either user-invoked (`disable-model-invocation: true` plus `
 To (re)link every skill outside `deprecated/` and `misc/` into the local harness skill directories (`~/.claude/skills`, `~/.agents/skills`), run `scripts/link-skills.sh`. Each entry is a symlink into this repo, so a `git pull` keeps installed skills current; re-run the script after adding, removing, or renaming a skill.
 
 No em-dashes anywhere in this repo's prose (`SKILL.md` files, docs, `README.md`, `CHANGELOG.md`, ADRs, changesets, code comments). Where a sentence reaches for one, rewrite it instead with a comma, colon, period, parentheses, or a conjunction, whichever the sentence actually wants; never do a blind character substitution.
+
+## Jules Delegation Framework
+
+This repository delegates code implementation to Google Jules (`jules.google`).
+- Local harness: planning, domain modeling, ticket authoring, prompt engineering, and read-only test verification. It never edits source code or test files directly.
+- Jules Coder Agent: writes code and tests test-first, opens a GitHub Pull Request.
+- Jules Tester Agent: mandatory for every PR; writes boundary and adversarial tests in its Cloud VM.
+- Test commands: run project test suites (e.g. `npm test`) to verify changes before merge.

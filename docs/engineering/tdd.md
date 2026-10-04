@@ -1,8 +1,8 @@
 ## What it does
 
-`tdd` builds a feature or fixes a bug test-first: one failing test, then just enough code to pass it, then the next behaviour. It carries the standards that make that loop produce tests worth keeping: what a good test is, where tests go, what mocks are for, and the three anti-patterns that quietly ruin a suite.
+`tdd` defines the red-green testing discipline that the local harness mandates in implementation prompts dispatched to Google Jules (`jules.google`). It establishes what a good test is, where tests go, what mocks are for, and the three anti-patterns that ruin a test suite.
 
-It writes no test at a seam you have not agreed to first. Before any test exists, it names the public boundaries it intends to test at and stops for your confirmation, because testing effort is finite and this is where you spend it on the critical paths instead of on every edge case. The other thing to know is that `tdd` is a **reference**, not a driver. It holds the rules of the loop, and something else (you, or [implement](https://aihero.dev/skills-implement)) runs the [session](https://www.aihero.dev/ai-coding-dictionary/session) that applies them.
+Because all code authoring is delegated to Jules, the local harness never writes test or production files directly in the repository. Instead, it embeds the strict rules of this skill into every task prompt sent to the Jules Coder Agent, ensuring Jules writes failing tests first in its Cloud VM before writing minimal code to turn them green. All resulting PRs are subsequently probed by the Jules Tester Agent.
 
 ## When to reach for it
 
